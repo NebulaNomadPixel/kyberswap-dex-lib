@@ -63,6 +63,7 @@ import (
 	pkg_liquiditysource_etherfi_weeth "github.com/KyberNetwork/kyberswap-dex-lib/pkg/liquidity-source/etherfi/weeth"
 	pkg_liquiditysource_eulerswap_v1 "github.com/KyberNetwork/kyberswap-dex-lib/pkg/liquidity-source/euler-swap/v1"
 	pkg_liquiditysource_eulerswap_v2 "github.com/KyberNetwork/kyberswap-dex-lib/pkg/liquidity-source/euler-swap/v2"
+	pkg_liquiditysource_feltir "github.com/KyberNetwork/kyberswap-dex-lib/pkg/liquidity-source/feltir"
 	pkg_liquiditysource_fluid_dexlite "github.com/KyberNetwork/kyberswap-dex-lib/pkg/liquidity-source/fluid/dex-lite"
 	pkg_liquiditysource_fluid_dext1 "github.com/KyberNetwork/kyberswap-dex-lib/pkg/liquidity-source/fluid/dex-t1"
 	pkg_liquiditysource_fluid_dexv2 "github.com/KyberNetwork/kyberswap-dex-lib/pkg/liquidity-source/fluid/dex-v2"
@@ -144,6 +145,7 @@ import (
 	pkg_liquiditysource_uniswap_v4 "github.com/KyberNetwork/kyberswap-dex-lib/pkg/liquidity-source/uniswap/v4"
 	pkg_liquiditysource_uniswap_v4_hooks_aegis "github.com/KyberNetwork/kyberswap-dex-lib/pkg/liquidity-source/uniswap/v4/hooks/aegis"
 	pkg_liquiditysource_uniswap_v4_hooks_alpha "github.com/KyberNetwork/kyberswap-dex-lib/pkg/liquidity-source/uniswap/v4/hooks/alpha"
+	pkg_liquiditysource_uniswap_v4_hooks_alphix "github.com/KyberNetwork/kyberswap-dex-lib/pkg/liquidity-source/uniswap/v4/hooks/alphix"
 	pkg_liquiditysource_uniswap_v4_hooks_angstrom "github.com/KyberNetwork/kyberswap-dex-lib/pkg/liquidity-source/uniswap/v4/hooks/angstrom"
 	pkg_liquiditysource_uniswap_v4_hooks_arena "github.com/KyberNetwork/kyberswap-dex-lib/pkg/liquidity-source/uniswap/v4/hooks/arena"
 	pkg_liquiditysource_uniswap_v4_hooks_arrakis "github.com/KyberNetwork/kyberswap-dex-lib/pkg/liquidity-source/uniswap/v4/hooks/arrakis"
@@ -157,6 +159,7 @@ import (
 	pkg_liquiditysource_uniswap_v4_hooks_nft_strategy "github.com/KyberNetwork/kyberswap-dex-lib/pkg/liquidity-source/uniswap/v4/hooks/nft_strategy"
 	pkg_liquiditysource_uniswap_v4_hooks_renzo "github.com/KyberNetwork/kyberswap-dex-lib/pkg/liquidity-source/uniswap/v4/hooks/renzo"
 	pkg_liquiditysource_uniswap_v4_hooks_zora "github.com/KyberNetwork/kyberswap-dex-lib/pkg/liquidity-source/uniswap/v4/hooks/zora"
+	pkg_liquiditysource_usdai "github.com/KyberNetwork/kyberswap-dex-lib/pkg/liquidity-source/usd-ai"
 	pkg_liquiditysource_usd0pp "github.com/KyberNetwork/kyberswap-dex-lib/pkg/liquidity-source/usd0pp"
 	pkg_liquiditysource_valantisstex "github.com/KyberNetwork/kyberswap-dex-lib/pkg/liquidity-source/valantis-stex"
 	pkg_liquiditysource_velocorev2_cpmm "github.com/KyberNetwork/kyberswap-dex-lib/pkg/liquidity-source/velocore-v2/cpmm"
@@ -277,6 +280,7 @@ func init() {
 	_ = msgpack.RegisterConcreteType(&pkg_liquiditysource_etherfi_weeth.PoolSimulator{})
 	_ = msgpack.RegisterConcreteType(&pkg_liquiditysource_eulerswap_v1.PoolSimulator{})
 	_ = msgpack.RegisterConcreteType(&pkg_liquiditysource_eulerswap_v2.PoolSimulator{})
+	_ = msgpack.RegisterConcreteType(&pkg_liquiditysource_feltir.PoolSimulator{})
 	_ = msgpack.RegisterConcreteType(&pkg_liquiditysource_fluid_dexlite.PoolSimulator{})
 	_ = msgpack.RegisterConcreteType(&pkg_liquiditysource_fluid_dext1.PoolSimulator{})
 	_ = msgpack.RegisterConcreteType(&pkg_liquiditysource_fluid_dexv2.PoolSimulator{})
@@ -358,6 +362,7 @@ func init() {
 	_ = msgpack.RegisterConcreteType(&pkg_liquiditysource_uniswap_v4.PoolSimulator{})
 	_ = msgpack.RegisterConcreteType(&pkg_liquiditysource_uniswap_v4_hooks_aegis.Hook{})
 	_ = msgpack.RegisterConcreteType(&pkg_liquiditysource_uniswap_v4_hooks_alpha.Hook{})
+	_ = msgpack.RegisterConcreteType(&pkg_liquiditysource_uniswap_v4_hooks_alphix.Hook{})
 	_ = msgpack.RegisterConcreteType(&pkg_liquiditysource_uniswap_v4_hooks_angstrom.Hook{})
 	_ = msgpack.RegisterConcreteType(&pkg_liquiditysource_uniswap_v4_hooks_arena.Hook{})
 	_ = msgpack.RegisterConcreteType(&pkg_liquiditysource_uniswap_v4_hooks_arrakis.Hook{})
@@ -371,6 +376,7 @@ func init() {
 	_ = msgpack.RegisterConcreteType(&pkg_liquiditysource_uniswap_v4_hooks_nft_strategy.Hook{})
 	_ = msgpack.RegisterConcreteType(&pkg_liquiditysource_uniswap_v4_hooks_renzo.Hook{})
 	_ = msgpack.RegisterConcreteType(&pkg_liquiditysource_uniswap_v4_hooks_zora.Hook{})
+	_ = msgpack.RegisterConcreteType(&pkg_liquiditysource_usdai.PoolSimulator{})
 	_ = msgpack.RegisterConcreteType(&pkg_liquiditysource_usd0pp.PoolSimulator{})
 	_ = msgpack.RegisterConcreteType(&pkg_liquiditysource_valantisstex.PoolSimulator{})
 	_ = msgpack.RegisterConcreteType(&pkg_liquiditysource_velocorev2_cpmm.PoolSimulator{})

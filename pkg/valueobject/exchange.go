@@ -101,6 +101,7 @@ const (
 	ExchangeEulerSwap                  = "euler-swap"
 	ExchangeEulerSwapV2                = "euler-swap-v2"
 	ExchangeFakePool                   = "fake-pool"
+	ExchangeFeltir                     = "feltir"
 	ExchangeFluidDexLite               = "fluid-dex-lite"
 	ExchangeFluidDexT1                 = "fluid-dex-t1"
 	ExchangeFluidDexV2                 = "fluid-dex-v2"
@@ -244,6 +245,7 @@ const (
 	ExchangeUniswapV4                  = "uniswap-v4"
 	ExchangeUniswapV4Aegis             = "uniswap-v4-aegis"
 	ExchangeUniswapV4Alpha             = "uniswap-v4-alpha"
+	ExchangeUniswapV4Alphix            = "uniswap-v4-alphix"
 	ExchangeUniswapV4Angstrom          = "uniswap-v4-angstrom"
 	ExchangeUniswapV4Arena             = "uniswap-v4-arena"
 	ExchangeUniswapV4Arrakis           = "uniswap-v4-arrakis"
@@ -261,6 +263,7 @@ const (
 	ExchangeUniswapV4Renzo             = "uniswap-v4-renzo"
 	ExchangeUniswapV4Zora              = "uniswap-v4-zora"
 	ExchangeUsd0PP                     = "usd0pp"
+	ExchangeUsdAi                      = "usd-ai"
 	ExchangeUsdsLitePsm                = "usds-lite-psm"
 	ExchangeValantisStex               = "valantis-stex"
 	ExchangeVelocoreV2CPMM             = "velocore-v2-cpmm"
@@ -307,8 +310,8 @@ var RFQSourceSet = map[Exchange]struct{}{
 	ExchangeUniswapLO:  {},
 }
 
-func IsRFQSource(exchange Exchange) bool {
-	_, ok := RFQSourceSet[exchange]
+func IsRFQSource[T ~string](exchange T) bool {
+	_, ok := RFQSourceSet[Exchange(exchange)]
 	return ok
 }
 
@@ -319,12 +322,28 @@ var needFallbackSourceSet = map[Exchange]struct{}{
 	ExchangeAximaV2: {},
 }
 
-func NeedsFallbackSource(exchange Exchange) bool {
-	if _, ok := needFallbackSourceSet[exchange]; ok {
+func NeedsFallbackSource[T ~string](exchange T) bool {
+	if _, ok := needFallbackSourceSet[Exchange(exchange)]; ok {
 		return true
 	}
 
 	return IsRFQSource(exchange)
+}
+
+var PropAMMSourceSet = map[Exchange]struct{}{
+	ExchangeWildcard:    {},
+	ExchangeTessera:     {},
+	ExchangeElfomofi:    {},
+	ExchangeAximaV2:     {},
+	ExchangeKipseliProp: {},
+	ExchangeWasabiProp:  {},
+	ExchangeObric:       {},
+	ExchangePoe:         {},
+}
+
+func IsPropAMMSource[T ~string](exchange T) bool {
+	_, contained := PropAMMSourceSet[Exchange(exchange)]
+	return contained
 }
 
 // SingleSwapSourceSet is a set of exchanges that
@@ -339,7 +358,7 @@ var SingleSwapSourceSet = map[Exchange]struct{}{
 	ExchangeWooFiV3:        {},
 }
 
-func IsSingleSwapSource(exchange Exchange) bool {
-	_, ok := SingleSwapSourceSet[exchange]
+func IsSingleSwapSource[T ~string](exchange T) bool {
+	_, ok := SingleSwapSourceSet[Exchange(exchange)]
 	return ok
 }
