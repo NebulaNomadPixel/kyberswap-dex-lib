@@ -18,8 +18,8 @@ import (
 
 func TestGetNewPoolStatePrefersLogsOverFlashCache(t *testing.T) {
 	extraBytes, err := json.Marshal(Extra{
-		PX96:              uint256.NewInt(1),
-		Fee:               1,
+		PriceX96:          uint256.NewInt(1),
+		FeeQ48:            1,
 		LatestUpdateBlock: 10,
 		BlockDelay:        5,
 		ConcentrationK:    5000,
@@ -81,8 +81,8 @@ func TestGetNewPoolStatePrefersLogsOverFlashCache(t *testing.T) {
 
 func TestProcessLogsUpdatesLatestUpdateBlock(t *testing.T) {
 	extraBytes, err := json.Marshal(Extra{
-		PX96:              uint256.NewInt(1),
-		Fee:               1,
+		PriceX96:          uint256.NewInt(1),
+		FeeQ48:            1,
 		LatestUpdateBlock: 10,
 		BlockDelay:        5,
 		ConcentrationK:    5000,

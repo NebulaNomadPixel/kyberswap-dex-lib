@@ -13,12 +13,12 @@ import (
 	"github.com/KyberNetwork/kyberswap-dex-lib/pkg/valueobject"
 )
 
-func TestCloneStateDeepCopy(t *testing.T) {
+func TestCloneStateUpdateBalance(t *testing.T) {
 	wrappedNative := strings.ToLower(valueobject.WrappedNativeMap[valueobject.ChainIDBase])
 
 	extraBytes, err := json.Marshal(Extra{
-		PX96:              uint256.NewInt(1),
-		Fee:               1,
+		PriceX96:          uint256.NewInt(1),
+		FeeQ48:            1,
 		LatestUpdateBlock: 1,
 		ConcentrationK:    5000,
 	})
@@ -28,10 +28,7 @@ func TestCloneStateDeepCopy(t *testing.T) {
 
 	staticExtraBytes, err := json.Marshal(StaticExtra{
 		PeripheryAddress: defaultPeripheryAddress,
-		Permit2Address:   defaultPermit2Address,
-		RawTokenX:        valueobject.ZeroAddress,
-		RawTokenY:        "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
-		WrappedNative:    wrappedNative,
+		HasNative:        true,
 	})
 	if err != nil {
 		t.Fatalf("marshal static extra: %v", err)
@@ -59,28 +56,25 @@ func TestCloneStateDeepCopy(t *testing.T) {
 		TokenAmountOut: pool.TokenAmount{Token: sim.GetTokens()[1], Amount: big.NewInt(20)},
 		Fee:            pool.TokenAmount{Token: sim.GetTokens()[1], Amount: big.NewInt(0)},
 		SwapInfo: SwapInfo{
-			NextPX96: uint256.NewInt(2),
+			nextPX96: uint256.NewInt(2),
 		},
 	})
 
 	if sim.GetReserves()[0].Cmp(big.NewInt(100)) != 0 || sim.GetReserves()[1].Cmp(big.NewInt(200)) != 0 {
 		t.Fatalf("original reserves mutated: got %s/%s", sim.GetReserves()[0], sim.GetReserves()[1])
 	}
-	if sim.priceX96.Uint64() != 1 {
-		t.Fatalf("original price mutated: got %d", sim.priceX96.Uint64())
+	if sim.PriceX96.Uint64() != 1 {
+		t.Fatalf("original price mutated: got %d", sim.PriceX96.Uint64())
 	}
-	if cloned.(*PoolSimulator).priceX96.Uint64() != 2 {
-		t.Fatalf("cloned price was not updated: got %d", cloned.(*PoolSimulator).priceX96.Uint64())
+	if cloned.(*PoolSimulator).PriceX96.Uint64() != 2 {
+		t.Fatalf("cloned price was not updated: got %d", cloned.(*PoolSimulator).PriceX96.Uint64())
 	}
 
 	meta := sim.GetMetaInfo(sim.GetTokens()[1], sim.GetTokens()[0]).(PoolMeta)
 	if meta.RouterAddress != defaultPeripheryAddress {
 		t.Fatalf("unexpected router address: got %s", meta.RouterAddress)
 	}
-	if meta.Permit2Address != defaultPermit2Address {
-		t.Fatalf("unexpected permit2 address: got %s", meta.Permit2Address)
-	}
-	if meta.ApprovalAddress != defaultPermit2Address {
+	if meta.ApprovalAddress != strings.ToLower(valueobject.Permit2(8453).Hex()) {
 		t.Fatalf("unexpected approval address: got %s", meta.ApprovalAddress)
 	}
 }
@@ -89,8 +83,8 @@ func TestCalcAmountOutReturnsInsufficientLiquidityWhenPriceIsStale(t *testing.T)
 	wrappedNative := strings.ToLower(valueobject.WrappedNativeMap[valueobject.ChainIDBase])
 
 	extraBytes, err := json.Marshal(Extra{
-		PX96:              new(uint256.Int).Lsh(uint256.NewInt(1), 96),
-		Fee:               1,
+		PriceX96:          new(uint256.Int).Lsh(uint256.NewInt(1), 96),
+		FeeQ48:            1,
 		LatestUpdateBlock: 10,
 		BlockDelay:        2,
 		ConcentrationK:    5000,
@@ -101,10 +95,7 @@ func TestCalcAmountOutReturnsInsufficientLiquidityWhenPriceIsStale(t *testing.T)
 
 	staticExtraBytes, err := json.Marshal(StaticExtra{
 		PeripheryAddress: defaultPeripheryAddress,
-		Permit2Address:   defaultPermit2Address,
-		RawTokenX:        valueobject.ZeroAddress,
-		RawTokenY:        "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
-		WrappedNative:    wrappedNative,
+		HasNative:        true,
 	})
 	if err != nil {
 		t.Fatalf("marshal static extra: %v", err)

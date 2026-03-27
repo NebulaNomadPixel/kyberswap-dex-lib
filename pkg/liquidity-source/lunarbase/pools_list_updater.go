@@ -2,7 +2,6 @@ package lunarbase
 
 import (
 	"context"
-	"time"
 
 	"github.com/KyberNetwork/ethrpc"
 	"github.com/ethereum/go-ethereum/common"
@@ -40,16 +39,15 @@ func (u *PoolsListUpdater) GetNewPools(ctx context.Context, metadataBytes []byte
 		return nil, metadataBytes, nil
 	}
 
-	state, err := fetchRPCState(ctx, u.config, u.ethrpcClient, nil)
+	state, err := fetchRPCState(ctx, nil, u.config, u.ethrpcClient, nil)
 	if err != nil {
 		return nil, metadataBytes, err
 	}
 
-	poolEntity, err := buildEntityPool(u.config, state)
+	poolEntity, err := buildEntityPool(nil, u.config, state)
 	if err != nil {
 		return nil, metadataBytes, err
 	}
-	poolEntity.Timestamp = time.Now().Unix()
 
 	if u.config.WsURL != "" || u.config.FlashWsURL != "" {
 		InitFlashBlockSubscriber(
@@ -66,5 +64,5 @@ func (u *PoolsListUpdater) GetNewPools(ctx context.Context, metadataBytes []byte
 		return nil, nil, err
 	}
 
-	return []entity.Pool{poolEntity}, metadataBytes, nil
+	return []entity.Pool{*poolEntity}, metadataBytes, nil
 }

@@ -48,7 +48,6 @@ func assertYToX(t *testing.T, name string,
 	assert.Equal(t, expectedFee, result.Fee.Dec(), "%s: fee mismatch", name)
 }
 
-
 func TestVector01_XToY_Price1_Fee5pct_EqualReserves(t *testing.T) {
 	assertXToY(t, "V1",
 		"79228162514264337593543950336", 14073748835532,
@@ -139,7 +138,6 @@ func TestVector10_XToY_LargeRelativeSwap(t *testing.T) {
 	)
 }
 
-
 func TestVector11_YToX_Price1_Fee5pct(t *testing.T) {
 	assertYToX(t, "V11",
 		"79228162514264337593543950336", 14073748835532,
@@ -184,7 +182,6 @@ func TestVector15_YToX_PriceHalf(t *testing.T) {
 		"1899903299258648504", "56025622405955431136665335759", "99994910487291306",
 	)
 }
-
 
 func TestIsqrt(t *testing.T) {
 	cases := []struct {

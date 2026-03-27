@@ -3,7 +3,6 @@ package lunarbase
 import (
 	"context"
 	"math/big"
-	"strings"
 	"time"
 
 	"github.com/KyberNetwork/ethrpc"
@@ -13,6 +12,7 @@ import (
 	"github.com/ethereum/go-ethereum/ethclient/gethclient"
 	"github.com/goccy/go-json"
 	"github.com/holiman/uint256"
+	"github.com/rs/zerolog/log"
 
 	"github.com/KyberNetwork/kyberswap-dex-lib/pkg/entity"
 	"github.com/KyberNetwork/kyberswap-dex-lib/pkg/source/pool"
@@ -67,37 +67,21 @@ func (t *PoolTracker) GetNewPoolStateWithOverrides(
 	return t.getNewPoolState(ctx, p, params.Overrides)
 }
 
-func (t *PoolTracker) GetDependencies(_ context.Context, p entity.Pool) ([]string, bool, error) {
-	return []string{strings.ToLower(p.Address)}, true, nil
-}
-
 func (t *PoolTracker) getNewPoolState(
 	ctx context.Context,
 	p entity.Pool,
 	overrides map[common.Address]gethclient.OverrideAccount,
 ) (entity.Pool, error) {
-	state, err := fetchRPCState(ctx, t.config, t.ethrpcClient, overrides)
+	log.Ctx(ctx).Info().Str("pool", p.Address).Msg("getting new state")
+	defer log.Ctx(ctx).Info().Str("pool", p.Address).Msg("finished getting new state")
+
+	state, err := fetchRPCState(ctx, &p, t.config, t.ethrpcClient, overrides)
 	if err != nil {
 		return p, err
 	}
 
-	p.Reserves = entity.PoolReserves{
-		state.reserveX.String(),
-		state.reserveY.String(),
-	}
-	p.BlockNumber = state.blockNumber
-	p.Timestamp = time.Now().Unix()
-
-	updatedPool, err := buildEntityPool(t.config, state)
-	if err != nil {
-		return p, err
-	}
-
-	p.Extra = updatedPool.Extra
-	p.StaticExtra = updatedPool.StaticExtra
-	p.Tokens = updatedPool.Tokens
-
-	return p, nil
+	_, err = buildEntityPool(&p, t.config, state)
+	return p, err
 }
 
 func (t *PoolTracker) processLogs(p entity.Pool, logs []types.Log) (entity.Pool, error) {
@@ -108,30 +92,30 @@ func (t *PoolTracker) processLogs(p entity.Pool, logs []types.Log) (entity.Pool,
 
 	changed := false
 	var latestLogBlock uint64
-	for _, log := range logs {
-		if len(log.Topics) == 0 {
+	for _, lg := range logs {
+		if len(lg.Topics) == 0 {
 			continue
 		}
-		if log.BlockNumber > latestLogBlock {
-			latestLogBlock = log.BlockNumber
+		if lg.BlockNumber > latestLogBlock {
+			latestLogBlock = lg.BlockNumber
 		}
 
-		switch log.Topics[0] {
+		switch lg.Topics[0] {
 		case topicStateUpdated:
-			if err := t.processStateUpdated(&extra, log); err == nil {
+			if err := t.processStateUpdated(&extra, lg); err == nil {
 				changed = true
 			}
 		case topicSync:
-			if reserveX, reserveY, err := t.processSync(log); err == nil {
+			if reserveX, reserveY, err := t.processSync(lg); err == nil {
 				p.Reserves = entity.PoolReserves{reserveX.String(), reserveY.String()}
 				changed = true
 			}
 		case topicConcentrationKSet:
-			if err := t.processConcentrationKSet(&extra, log); err == nil {
+			if err := t.processConcentrationKSet(&extra, lg); err == nil {
 				changed = true
 			}
 		case topicBlockDelaySet:
-			if err := t.processBlockDelaySet(&extra, log); err == nil {
+			if err := t.processBlockDelaySet(&extra, lg); err == nil {
 				changed = true
 			}
 		}
@@ -171,8 +155,8 @@ func (t *PoolTracker) processStateUpdated(extra *Extra, log types.Log) error {
 		return ErrQuoteFailed
 	}
 
-	extra.PX96 = uint256.MustFromBig(tuple.PX96)
-	extra.Fee = tuple.Fee.Uint64()
+	extra.PriceX96 = uint256.MustFromBig(tuple.PX96)
+	extra.FeeQ48 = tuple.Fee.Uint64()
 	extra.LatestUpdateBlock = log.BlockNumber
 
 	return nil
@@ -240,8 +224,8 @@ func (t *PoolTracker) buildPoolFromCachedState(p entity.Pool, state *poolState) 
 		return p, err
 	}
 
-	extra.PX96 = new(uint256.Int).Set(state.PX96)
-	extra.Fee = state.FeeQ48
+	extra.PriceX96 = new(uint256.Int).Set(state.PX96)
+	extra.FeeQ48 = state.FeeQ48
 	if state.LatestUpdateBlock > 0 {
 		extra.LatestUpdateBlock = state.LatestUpdateBlock
 	}

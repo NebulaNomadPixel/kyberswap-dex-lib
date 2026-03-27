@@ -29,10 +29,10 @@ func TestAllFuzzVectors(t *testing.T) {
 	defer f.Close()
 
 	var (
-		total      int
-		xToYCount  int
-		yToXCount  int
-		failures   []string
+		total     int
+		xToYCount int
+		yToXCount int
+		failures  []string
 	)
 
 	scanner := bufio.NewScanner(f)
