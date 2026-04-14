@@ -21,29 +21,22 @@ func concentrationQ48(baseFeeQ48 uint64, amountIn *uint256.Int, reserveIn *uint2
 		return c
 	}
 
-	var rQ48 uint256.Int
+	var rQ48, tmp uint256.Int
 	if !amountIn.Lt(reserveIn) {
 		rQ48.Set(q48)
 	} else {
 		big256.MulDivDown(&rQ48, amountIn, q48, reserveIn)
 	}
 
-	var rSquaredQ48 uint256.Int
-	big256.MulDivDown(&rSquaredQ48, &rQ48, &rQ48, q48)
+	rSquaredQ48 := big256.MulDivDown(&rQ48, &rQ48, &rQ48, q48)
+	kTimesR2 := tmp.Mul(tmp.SetUint64(uint64(k)), rSquaredQ48)
+	multiplierQ48 := tmp.Add(kTimesR2, q48)
 
-	kU := uint256.NewInt(uint64(k))
-	var kTimesR2 uint256.Int
-	kTimesR2.Mul(kU, &rSquaredQ48)
-	var multiplierQ48 uint256.Int
-	multiplierQ48.Add(q48, &kTimesR2)
-
-	var result uint256.Int
-	big256.MulDivDown(&result, c, &multiplierQ48, q48)
-
+	result := big256.MulDivDown(&tmp, c, multiplierQ48, q48)
 	if !result.Lt(q48) {
 		return result.Set(q48)
 	}
-	return &result
+	return result
 }
 
 func lowerBound(sqrtPriceX96 *uint256.Int, cQ48 uint64) *uint256.Int {
@@ -51,8 +44,7 @@ func lowerBound(sqrtPriceX96 *uint256.Int, cQ48 uint64) *uint256.Int {
 	oneMinusC.Sub(q48, oneMinusC.SetUint64(cQ48))
 
 	sqrtOneMinusC := isqrt(&oneMinusC)
-	var result uint256.Int
-	return big256.MulDivDown(&result, sqrtPriceX96, sqrtOneMinusC, q24)
+	return big256.MulDivDown(sqrtOneMinusC, sqrtPriceX96, sqrtOneMinusC, q24)
 }
 
 func upperBound(sqrtPriceX96 *uint256.Int, cQ48 uint64) *uint256.Int {
@@ -60,16 +52,14 @@ func upperBound(sqrtPriceX96 *uint256.Int, cQ48 uint64) *uint256.Int {
 	oneMinusC.Sub(q48, oneMinusC.SetUint64(cQ48))
 
 	sqrtOneMinusC := isqrt(&oneMinusC)
-	var result uint256.Int
-	return big256.MulDivDown(&result, sqrtPriceX96, q24, sqrtOneMinusC)
+	return big256.MulDivDown(sqrtOneMinusC, sqrtPriceX96, q24, sqrtOneMinusC)
 }
 
 func liquidityY(sqrtPriceX96, pBid, reserveY *uint256.Int) *uint256.Int {
 	var denom uint256.Int
 	denom.Sub(sqrtPriceX96, pBid)
 
-	var result uint256.Int
-	return big256.MulDivDown(&result, reserveY, q96, &denom)
+	return big256.MulDivDown(&denom, reserveY, q96, &denom)
 }
 
 func liquidityX(sqrtPriceX96, pAsk, reserveX *uint256.Int) *uint256.Int {
@@ -79,8 +69,7 @@ func liquidityX(sqrtPriceX96, pAsk, reserveX *uint256.Int) *uint256.Int {
 	var denom uint256.Int
 	denom.Sub(pAsk, sqrtPriceX96)
 
-	var result uint256.Int
-	return big256.MulDivDown(&result, reserveX, &priceProductQ96, &denom)
+	return big256.MulDivDown(&denom, reserveX, &priceProductQ96, &denom)
 }
 
 func getNextSqrtPriceFromAmountXRoundingUp(sqrtPX96, liquidity, amountX *uint256.Int) *uint256.Int {
@@ -100,7 +89,7 @@ func getNextSqrtPriceFromAmountXRoundingUp(sqrtPX96, liquidity, amountX *uint256
 
 	divResult := num.Div(&num, sqrtPX96)
 	deno := divResult.Add(divResult, amountX)
-	return ceilDiv(&num, deno)
+	return big256.DivUp(&num, deno)
 }
 
 func getNextSqrtPriceFromAmountYRoundingDown(sqrtPX96, liquidity, amountY *uint256.Int) *uint256.Int {
@@ -128,33 +117,17 @@ func getAmountXDelta(sqrtRatioA, sqrtRatioB, liquidity *uint256.Int, roundUp boo
 
 	if roundUp {
 		md := big256.MulDivUp(&num1, &num1, &num2, sb)
-		return ceilDiv(md, sa)
+		return big256.DivUp(md, sa)
 	}
 	md := big256.MulDivDown(&num1, &num1, &num2, sb)
 	return md.Div(md, sa)
 }
 
 func getAmountYDelta(sqrtRatioA, sqrtRatioB, liquidity *uint256.Int, roundUp bool) *uint256.Int {
-	sa, sb := sqrtRatioA, sqrtRatioB
-	if sa.Gt(sb) {
-		sa, sb = sb, sa
-	}
-
 	var diff uint256.Int
-	diff.Sub(sb, sa)
+	diff.Abs(diff.Sub(sqrtRatioB, sqrtRatioA))
 
-	if roundUp {
-		return big256.MulDivUp(&diff, liquidity, &diff, q96)
-	}
-	return big256.MulDivDown(&diff, liquidity, &diff, q96)
-}
-
-func ceilDiv(a, b *uint256.Int) *uint256.Int {
-	var q, rem uint256.Int
-	if q.DivMod(a, b, &rem); !rem.IsZero() {
-		q.AddUint64(&q, 1)
-	}
-	return &q
+	return big256.MulDivRounding(&diff, liquidity, &diff, q96, roundUp)
 }
 
 func quoteXToY(params *PoolParams, dx *uint256.Int) *QuoteResult {
@@ -183,7 +156,7 @@ func quoteXToY(params *PoolParams, dx *uint256.Int) *QuoteResult {
 
 	var fee uint256.Int
 	big256.MulDivDown(&fee, dy, uint256.NewInt(params.FeeQ48), q48)
-	dyAfterFee := new(uint256.Int).Sub(dy, &fee)
+	dyAfterFee := dy.Sub(dy, &fee)
 
 	return &QuoteResult{
 		AmountOut:     dyAfterFee,
@@ -218,7 +191,7 @@ func quoteYToX(params *PoolParams, dy *uint256.Int) *QuoteResult {
 
 	var fee uint256.Int
 	big256.MulDivDown(&fee, dxOut, uint256.NewInt(params.FeeQ48), q48)
-	dxAfterFee := new(uint256.Int).Sub(dxOut, &fee)
+	dxAfterFee := dxOut.Sub(dxOut, &fee)
 
 	return &QuoteResult{
 		AmountOut:     dxAfterFee,
